@@ -9,6 +9,9 @@ exports.createUser = async function(req,res){
 
         const result = await userService.createUser({name,comapny_id,email,mobile,desgnation,password})
 
+
+
+        
         res.status(200).json({
             success :true,
             message :"User created succefully",
