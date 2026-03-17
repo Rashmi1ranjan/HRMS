@@ -6,19 +6,17 @@ const authMiddleware = require("../middleware/auth.middleware");
 // All role routes require authentication
 router.use(authMiddleware);
 
-// Create role
+// Create
 router.post("/", RoleController.createRole);
 
-// Get all roles
+// Read
 router.get("/", RoleController.getRoles);
-
-// Get role by ID
 router.get("/:id", RoleController.getRoleById);
 
-// Update role
+// Update
 router.put("/:id", RoleController.updateRole);
 
-// Delete role
+// Delete
 router.delete("/:id", RoleController.deleteRole);
 
 module.exports = router;

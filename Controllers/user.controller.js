@@ -1,5 +1,19 @@
 const UserService = require("../Service/user.service");
 
+// Get all users with company, role and designation info
+exports.getUsersWithCompany = async (req, res) => {
+    try {
+        const result = await UserService.getUsersWithCompany();
+        res.status(200).json({
+            success: true,
+            message: "Users with company info fetched successfully",
+            ...result,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // Create user
 exports.createUser = async (req, res) => {
     try {
@@ -8,6 +22,7 @@ exports.createUser = async (req, res) => {
 
         res.status(201).json({
             success: true,
+            message: "User created successfully",
             data: result,
         });
     } catch (error) {
@@ -22,11 +37,13 @@ exports.createUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
     try {
         const company_id = req.company.id; // From JWT token
-        const users = await UserService.getUsers(company_id);
+        const { page = 1, limit = 10 } = req.query;
+        const result = await UserService.getUsers(company_id, page, limit);
 
         res.status(200).json({
             success: true,
-            data: users,
+            message: "Users fetched successfully",
+            ...result,
         });
     } catch (error) {
         res.status(500).json({
@@ -44,6 +61,7 @@ exports.getUserById = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            message: "User fetched successfully",
             data: user,
         });
     } catch (error) {
@@ -66,6 +84,7 @@ exports.updateUser = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            message: "User updated successfully",
             data: result,
         });
     } catch (error) {
@@ -84,6 +103,7 @@ exports.deleteUser = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            message: "User deleted successfully",
             data: result,
         });
     } catch (error) {

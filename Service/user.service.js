@@ -2,9 +2,17 @@ const bcrypt = require("bcrypt");
 const User = require("../models/user.model");
 const Role = require("../models/role.model");
 
+const Designation = require("../models/designation.model");
+
+// Get all users with company, role and designation info
+exports.getUsersWithCompany = async () => {
+    const [rows] = await User.findUsersWithCompany();
+    return { count: rows.length, data: rows };
+};
+
 // Create a new user
 exports.createUser = async (data, company_id) => {
-    const { name, email, password, role_id, status } = data;
+    const { name, email, password, role_id, designation_id, status } = data;
 
     // Validate required fields
     if (!name || !email || !password || !role_id) {
@@ -23,6 +31,14 @@ exports.createUser = async (data, company_id) => {
         throw new Error("Invalid role_id for this company");
     }
 
+    // Validate designation if provided
+    if (designation_id) {
+        const [designationExists] = await Designation.findByIdAndCompanyId(designation_id, company_id);
+        if (designationExists.length === 0) {
+            throw new Error("Invalid designation_id for this company");
+        }
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -30,6 +46,7 @@ exports.createUser = async (data, company_id) => {
     const [result] = await User.createUser({
         company_id,
         role_id,
+        designation_id,
         name,
         email,
         password: hashedPassword,
@@ -42,15 +59,24 @@ exports.createUser = async (data, company_id) => {
     };
 };
 
-// Get all users for a company
-exports.getUsers = async (company_id) => {
-    const [users] = await User.findByCompanyId(company_id);
+// Get all users for a company (paginated)
+exports.getUsers = async (company_id, page = 1, limit = 10) => {
+    page = parseInt(page, 10) || 1;
+    limit = parseInt(limit, 10) || 10;
 
-    // Remove password from response
-    return users.map((user) => {
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
-    });
+    const [users] = await User.findByCompanyId(company_id, page, limit);
+    const [countResult] = await User.countByCompanyId(company_id);
+    const total = countResult[0].total;
+
+    return {
+        data: users,          // password is not selected in the model query
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
 };
 
 // Get user by ID
@@ -94,11 +120,20 @@ exports.updateUser = async (id, company_id, data) => {
         }
     }
 
+    // Validate designation if provided
+    if (data.designation_id && data.designation_id !== currentUser.designation_id) {
+        const [designationExists] = await Designation.findByIdAndCompanyId(data.designation_id, company_id);
+        if (designationExists.length === 0) {
+            throw new Error("Invalid designation_id for this company");
+        }
+    }
+
     // Update user
     await User.updateUser(id, company_id, {
         name: name ?? currentUser.name,
         email: email ?? currentUser.email,
         role_id: role_id ?? currentUser.role_id,
+        designation_id: data.designation_id ?? currentUser.designation_id,
         status: status ?? currentUser.status,
     });
 
@@ -110,6 +145,20 @@ exports.updateUser = async (id, company_id, data) => {
 
     return {
         message: "User updated successfully",
+    };
+};
+
+// Search user by ID or Name
+exports.searchUser = async (search, company_id) => {
+    if (!search || search.trim() === "") {
+        throw new Error("Search query is required");
+    }
+
+    const [rows] = await User.findByIdOrName(search.trim(), company_id);
+
+    return {
+        count: rows.length,
+        data: rows,
     };
 };
 

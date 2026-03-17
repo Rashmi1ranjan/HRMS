@@ -8,6 +8,7 @@ exports.createRole = async (req, res) => {
 
         res.status(201).json({
             success: true,
+            message: "Role created successfully",
             data: result,
         });
     } catch (error) {
@@ -22,11 +23,13 @@ exports.createRole = async (req, res) => {
 exports.getRoles = async (req, res) => {
     try {
         const company_id = req.company.id; // From JWT token
-        const roles = await RoleService.getRoles(company_id);
+        const { page = 1, limit = 10 } = req.query;
+        const result = await RoleService.getRoles(company_id, page, limit);
 
         res.status(200).json({
             success: true,
-            data: roles,
+            message: "Roles fetched successfully",
+            ...result,
         });
     } catch (error) {
         res.status(500).json({
@@ -44,6 +47,7 @@ exports.getRoleById = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            message: "Role fetched successfully",
             data: role,
         });
     } catch (error) {
@@ -66,6 +70,7 @@ exports.updateRole = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            message: "Role updated successfully",
             data: result,
         });
     } catch (error) {
@@ -84,6 +89,7 @@ exports.deleteRole = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            message: "Role deleted successfully",
             data: result,
         });
     } catch (error) {

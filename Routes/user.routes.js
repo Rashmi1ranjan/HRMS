@@ -6,19 +6,19 @@ const authMiddleware = require("../middleware/auth.middleware");
 // All user routes require authentication
 router.use(authMiddleware);
 
-// Create user
+// Create
 router.post("/", UserController.createUser);
 
-// Get all users
+// Read
 router.get("/", UserController.getUsers);
-
-// Get user by ID
+router.get("/with-company", UserController.getUsersWithCompany);
+// router.get("/search", UserController.searchUser);
 router.get("/:id", UserController.getUserById);
 
-// Update user
+// Update
 router.put("/:id", UserController.updateUser);
 
-// Delete user
+// Delete
 router.delete("/:id", UserController.deleteUser);
 
 module.exports = router;

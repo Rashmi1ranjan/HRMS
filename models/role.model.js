@@ -24,13 +24,24 @@ exports.findById = async (id, company_id) => {
     return db.execute(sql, [id, company_id]);
 };
 
-// Find all roles for a company
-exports.findByCompanyId = async (company_id) => {
+// Find all roles for a company (with pagination)
+exports.findByCompanyId = async (company_id, page = 1, limit = 10) => {
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+    const offset = (pageNum - 1) * limitNum;
+
     const sql = `
     SELECT * FROM roles 
     WHERE company_id = ? AND deleted_at IS NULL
     ORDER BY created_at DESC
+    LIMIT ${limitNum} OFFSET ${offset}
   `;
+    return db.execute(sql, [company_id]);
+};
+
+// Count all roles for a company
+exports.countByCompanyId = async (company_id) => {
+    const sql = `SELECT COUNT(*) AS total FROM roles WHERE company_id = ? AND deleted_at IS NULL`;
     return db.execute(sql, [company_id]);
 };
 

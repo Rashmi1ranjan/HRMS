@@ -70,3 +70,24 @@ exports.login = async (data) => {
     token,
   };
 };
+
+// Get all companies with pagination
+exports.getAllCompanies = async (page = 1, limit = 10) => {
+  page = parseInt(page, 10) || 1;
+  limit = parseInt(limit, 10) || 10;
+
+  const [companies] = await Company.findAll(page, limit);
+  const [countResult] = await Company.countAll();
+  const total = countResult[0].total;
+
+  return {
+    data: companies,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+

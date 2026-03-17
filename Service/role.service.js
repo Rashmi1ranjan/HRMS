@@ -29,9 +29,23 @@ exports.createRole = async (data, company_id) => {
 };
 
 // Get all roles for a company
-exports.getRoles = async (company_id) => {
-    const [roles] = await Role.findByCompanyId(company_id);
-    return roles;
+exports.getRoles = async (company_id, page = 1, limit = 10) => {
+    page = parseInt(page, 10) || 1;
+    limit = parseInt(limit, 10) || 10;
+
+    const [roles] = await Role.findByCompanyId(company_id, page, limit);
+    const [countResult] = await Role.countByCompanyId(company_id);
+    const total = countResult[0].total;
+
+    return {
+        data: roles,
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
 };
 
 // Get role by ID
