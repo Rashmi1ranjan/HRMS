@@ -2,20 +2,21 @@ const express = require("express");
 const router = express.Router();
 const DepartmentController = require("../Controllers/department.controller");
 const authMiddleware = require("../middleware/auth.middleware");
+const { authorize } = require("../middleware/authorize.middleware");
 
-// All routes are protected and require company authentication
+// All routes are protected and require authentication
 router.use(authMiddleware);
 
-// Create
-router.post("/", DepartmentController.createDepartment);
+// Create - Admin, HR
+router.post("/", authorize(["Admin", "HR"]), DepartmentController.createDepartment);
 
-// Read
-router.get("/", DepartmentController.getAllDepartments);
+// Read - Admin, HR, Manager, Employee
+router.get("/", authorize(["Admin", "HR", "Manager", "Employee"]), DepartmentController.getAllDepartments);
 
-// Update
-router.put("/:id", DepartmentController.updateDepartment);
+// Update - Manager, Admin, HR (Manager can update)
+router.put("/:id", authorize(["Admin", "HR", "Manager"]), DepartmentController.updateDepartment);
 
-// Delete
-router.delete("/:id", DepartmentController.deleteDepartment);
+// Delete - Admin, HR
+router.delete("/:id", authorize(["Admin", "HR"]), DepartmentController.deleteDepartment);
 
 module.exports = router;

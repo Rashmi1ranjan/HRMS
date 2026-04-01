@@ -15,7 +15,13 @@ module.exports = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.company = decoded;
+    // Standardizing the request object:
+    // If it's a company login, 'id' is company_id and 'role' is superadmin
+    // if it's a user login, the token should contain company_id, user_id, and role
+    req.user = decoded; 
+    
+    // For backward compatibility while refactoring
+    req.company = { id: decoded.company_id || decoded.id };
 
     next();
 

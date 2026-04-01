@@ -2,23 +2,28 @@ const express = require("express");
 const router = express.Router();
 const UserController = require("../Controllers/user.controller");
 const authMiddleware = require("../middleware/auth.middleware");
+const { authorize, authorizeSelfOrRoles } = require("../middleware/authorize.middleware");
 
-// All user routes require authentication
+// Login route (Public)
+router.post("/login", UserController.login);
+
+// All other user routes require authentication
 router.use(authMiddleware);
 
-// Create
-router.post("/", UserController.createUser);
+// Create - Only Admin & HR
+router.post("/", authorize(["Admin", "HR"]), UserController.createUser);
 
 // Read
-router.get("/", UserController.getUsers);
-router.get("/with-company", UserController.getUsersWithCompany);
-// router.get("/search", UserController.searchUser);
-router.get("/:id", UserController.getUserById);
+// Admin, HR, Manager can read all. Employee can read.
+router.get("/", authorize(["Admin", "HR", "Manager", "Employee"]), UserController.getUsers);
+router.get("/with-company", authorize(["Admin", "HR"]), UserController.getUsersWithCompany);
+router.get("/:id", authorize(["Admin", "HR", "Manager", "Employee"]), UserController.getUserById);
 
 // Update
-router.put("/:id", UserController.updateUser);
+// Only Admin, HR, Manager can update ANY user. Employee can ONLY update THEMSELVES (limited update).
+router.put("/:id", authorizeSelfOrRoles(["Admin", "HR", "Manager"]), UserController.updateUser);
 
-// Delete
-router.delete("/:id", UserController.deleteUser);
+// Delete - Only Admin & HR
+router.delete("/:id", authorize(["Admin", "HR"]), UserController.deleteUser);
 
 module.exports = router;

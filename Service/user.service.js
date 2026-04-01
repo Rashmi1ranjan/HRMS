@@ -162,6 +162,69 @@ exports.searchUser = async (search, company_id) => {
     };
 };
 
+const jwt = require("jsonwebtoken");
+
+// User Login
+exports.login = async (data) => {
+    const { email, password } = data;
+
+    if (!email || !password) {
+        throw new Error("Email and password are required");
+    }
+
+    // Find user by email (we need many details, so using a specific query or finding first)
+    // Note: FindByEmail in model currently needs company_id. 
+    // We might need a global findByEmail or require company_id in login.
+    // Let's assume global login for now by adding a model method if needed, 
+    // or just search across all if email is unique globally.
+    // For now, let's use the DB instance directly for a simple global search if email is unique.
+    const db = require("../config/db");
+    const sql = `
+        SELECT u.*, r.role_name 
+        FROM users u
+        LEFT JOIN roles r ON u.role_id = r.id
+        WHERE u.email = ? AND u.deleted_at IS NULL
+    `;
+    const [rows] = await db.execute(sql, [email]);
+
+    if (rows.length === 0) {
+        throw new Error("Invalid email or password");
+    }
+
+    const user = rows[0];
+
+    // Verify password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+        throw new Error("Invalid email or password");
+    }
+
+    if (!user.status) {
+        throw new Error("User account is inactive");
+    }
+
+    // Generate token
+    const token = jwt.sign(
+        {
+            user_id: user.id,
+            company_id: user.company_id,
+            email: user.email,
+            role: user.role_name,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "1d" }
+    );
+
+    return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role_name,
+        company_id: user.company_id,
+        token,
+    };
+};
+
 // Delete user
 exports.deleteUser = async (id, company_id) => {
     // Check if user exists
