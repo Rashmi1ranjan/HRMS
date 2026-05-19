@@ -62,14 +62,21 @@ async function seed() {
 
             const company_id = companyResult.insertId;
 
-            // ── 2. Create superadmin role for this company ─────────────────────
-            const [roleResult] = await connection.execute(
-                `INSERT INTO roles (role_name, company_id, status)
-         VALUES (?, ?, ?)`,
-                ["superadmin", company_id, true]
-            );
+            // ── 2. Create standard roles for this company ─────────────────────
+            const standardRoles = ["superadmin", "Admin", "HR", "Manager", "Employee"];
+            let superadminRoleId = null;
 
-            const role_id = roleResult.insertId;
+            for (const roleName of standardRoles) {
+                const [rResult] = await connection.execute(
+                    `INSERT INTO roles (role_name, company_id, status) VALUES (?, ?, ?)`,
+                    [roleName, company_id, true]
+                );
+                if (roleName === "superadmin") {
+                    superadminRoleId = rResult.insertId;
+                }
+            }
+
+            const role_id = superadminRoleId;
 
             // ── 3. Create Departments and Designations ────────────────────────
             const departments = ["HR", "IT", "Sales", "Marketing"];
