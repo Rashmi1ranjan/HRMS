@@ -35,6 +35,7 @@ exports.punch = async (req, res) => {
         total_hours: 0,
       });
 
+
       // Refetch to get the full record
       const [newMasterRows] = await AttendanceModel.findMasterByUserAndDate(userId, today);
       masterRecord = newMasterRows[0];
